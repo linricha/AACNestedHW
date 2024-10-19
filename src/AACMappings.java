@@ -62,26 +62,49 @@ public class AACMappings implements AACPage {
 		File toRead = new File(filename);
 
 		// Assuming that file format is correct
+
+		// Tokenized Array of Strings of one line
 		String[] lineRead;
+
+		// Contains Category
 		String topicPlaceholder = "";
 
+		// Contains rest of the line after the first part
+		String totalWord = "";
+
+		// Used to read the next line
+		Scanner readNextLine = null;
+
 		try {
+			// Used to read from file
 			Scanner reading = new Scanner(toRead);
 			while (reading.hasNextLine()) {
-				lineRead = reading.tokens().toArray(String[] :: new);
 
-				if ((lineRead[0].substring(0, 1).compareTo(">") != 0) && (lineRead.length == 2)){
+				// Read one line at a time
+				readNextLine = new Scanner(reading.nextLine());
 
-					AACCategory topic = new AACCategory(lineRead[1]);
+				// array of strings of one line
+				lineRead = readNextLine.tokens().toArray(String[] :: new);
+
+
+				totalWord = lineRead[1];
+
+				for (int i = 2; i < lineRead.length; i++) {
+					totalWord = totalWord + " " + lineRead[i];
+				} // for
+
+				if ((lineRead[0].substring(0, 1).compareTo(">") != 0)){
+					AACCategory topic = new AACCategory(totalWord);
 					this.table.set(lineRead[0], topic);
 
 					topicPlaceholder = lineRead[0]; 
 
-				} else if ((lineRead.length == 2)) {
-					this.table.get(topicPlaceholder).storage.set(lineRead[0], lineRead[1]);
+				} else {
+					this.table.get(topicPlaceholder).storage.set(lineRead[0].substring(1), totalWord);
 				} // if/elseif
 			} // while
 			reading.close();
+			readNextLine.close();
 		} catch (Exception e) {
 			// file not found
 		} // try/catch
@@ -105,8 +128,8 @@ public class AACMappings implements AACPage {
 
 		try {
 			if (arrayLevel == TOPLEVEL) {
-				arrayLevel = CATEGORYLEVEL;
 				currentCategory = this.table.get(imageLoc);
+				arrayLevel = CATEGORYLEVEL;
 				return "";
 			} else if (arrayLevel == CATEGORYLEVEL) {
 				return currentCategory.select(imageLoc);

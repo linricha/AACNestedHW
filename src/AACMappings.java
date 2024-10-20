@@ -29,10 +29,25 @@ public class AACMappings implements AACPage {
 	 */
 	public static final int CATEGORYLEVEL = 1;
 
+	/**
+	 * Stores image and imageLocations.
+	 */
 	AssociativeArray<String, AACCategory> table;
 
+	/**
+	 * Level in table (either on AssociativeArray of table or AACCategory)
+	 */
 	int arrayLevel;
+
+	/**
+	 * Stores the current AACCategory.
+	 */
 	AACCategory currentCategory;
+	
+	/**
+	 * Stores the topLevelImageLocs with regular array indexing.
+	 */
+	AssociativeArray<Integer, String> topLevelImageLocs;
 	
 	/**
 	 * Creates a set of mappings for the AAC based on the provided
@@ -56,6 +71,7 @@ public class AACMappings implements AACPage {
 	 */
 	public AACMappings(String filename) {
 		table = new AssociativeArray<String, AACCategory>();
+		topLevelImageLocs = new AssociativeArray<Integer, String>();
 		arrayLevel = TOPLEVEL;
 		currentCategory = null; // default category
 
@@ -96,11 +112,12 @@ public class AACMappings implements AACPage {
 				if ((lineRead[0].substring(0, 1).compareTo(">") != 0)){
 					AACCategory topic = new AACCategory(totalWord);
 					this.table.set(lineRead[0], topic);
+					this.topLevelImageLocs.set(this.topLevelImageLocs.size(), lineRead[0]);
 
 					topicPlaceholder = lineRead[0]; 
 
 				} else {
-					this.table.get(topicPlaceholder).storage.set(lineRead[0].substring(1), totalWord);
+					this.table.get(topicPlaceholder).addItem(lineRead[0].substring(1), totalWord);
 				} // if/elseif
 			} // while
 			reading.close();
@@ -133,7 +150,7 @@ public class AACMappings implements AACPage {
 				return "";
 			} else if (arrayLevel == CATEGORYLEVEL) {
 				return currentCategory.select(imageLoc);
-			}
+			} // if/else-if
 		} catch (Exception e) { 
 			throw new NoSuchElementException();
 		} // try/catch
@@ -152,14 +169,16 @@ public class AACMappings implements AACPage {
 		if (arrayLevel == TOPLEVEL) {
 			strArr = new String[this.table.size()];
 
-			for (int i = 0; i < strArr.length; i ++) {
-				strArr[i] = this.table.pairs[i].key;
-			}
+			for (int i = 0; i < this.topLevelImageLocs.size(); i ++) {
+				try {
+					strArr[i] = this.topLevelImageLocs.get(i);
+				} catch (Exception e) {
+					// do nothing since index in bounds
+				} // try/catch
+			} // for
 			return strArr;
 		}	else {
 			try {
-				strArr = new String[this.currentCategory.storage.size()];
-
 				return this.currentCategory.getImageLocs();
 			} catch (Exception e) {
 				return null;
@@ -232,6 +251,7 @@ public class AACMappings implements AACPage {
 		try {
 			if (arrayLevel == TOPLEVEL) {
 				this.table.set(imageLoc, new AACCategory(text));
+				this.topLevelImageLocs.set(this.topLevelImageLocs.size(), imageLoc);
 			} else if (arrayLevel == CATEGORYLEVEL) {
 				currentCategory.addItem(imageLoc, text);
 			} // if/elseif

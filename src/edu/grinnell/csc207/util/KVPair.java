@@ -17,12 +17,12 @@ public class KVPair<K, V> {
   /**
    * The key.
    */
-  public K key;
+  K key;
 
   /**
    * The value.
    */
-  public V val;
+  V val;
 
   // +--------------+------------------------------------------------
   // | Constructors |
